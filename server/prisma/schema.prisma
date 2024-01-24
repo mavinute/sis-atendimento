@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid())
+  name String
+  email String
+  address String?
+  password String
+  stripe_customer_id String?
+
+  created_at DateTime? @default(now())
+  update_at DateTime? @default(now())
+
+  @@map("users")
+  subscriptions Subscription?
+  treatments Treatment[] // 1 cliente pode ter muitos tipos de tratamentos
+  services Service[]
+}
+
+model Subscription {
+  id String @id
+  status String
+  priceId String
+
+  created_at DateTime? @default(now())
+  update_at DateTime? @default(now())
+
+  @@map("subscriptions")
+  user_id String @unique
+  user User @relation(fields: [user_id], references: [id])
+}
+
+model Treatment {
+  id String @id @default(uuid())
+  name String
+  price Float
+  status Boolean @default(true)
+
+  created_at DateTime? @default(now())
+  update_at DateTime? @default(now())
+
+  @@map("treatments")
+  user_id String
+  user User @relation(fields: [user_id], references: [id])
+  services Service[]
+}
+
+model Service {
+  id String @id @default(uuid())
+  schedule DateTime
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @default(now())
+
+  @@map("services")
+  haircut_id String
+  user_id String
+  custumer_id String
+  treatment Treatment @relation(fields: [haircut_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
+  customer Customer @relation(fields: [custumer_id], references: [id])
+}
+
+model Customer {
+  id String @id @default(uuid())
+  name String
+  email String
+  address String
+  birth DateTime
+
+  @@map("customers")
+  services Service[]
+}
